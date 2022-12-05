@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import {Modal, Button} from 'react-bootstrap';
-import { POST } from '../utils/apiHelper';
+import { GET } from '../utils/apiHelper';
 import { API_URL_DEPARTMENT } from '../contance';
 import { valid } from '../utils/valid';
 
 const ModalDepartment = ({
-  department, selectDepartment, setSelectDepartment, departments, setDepartments, showDepartmentPopup, close, onChange, setFormData, setDepartmentErr
+  selectDepartment, setSelectDepartment, departments, setDepartments, showDepartmentPopup, close, onChange, setFormData, setDepartmentErr
 }) => {
 
   const [state, setState] = useState({
@@ -47,7 +47,7 @@ const ModalDepartment = ({
     e.preventDefault();
     const data = {...state};
 
-    POST(API_URL_DEPARTMENT, data)
+    GET(API_URL_DEPARTMENT, data)
     .then(res=> res && res.data && setDepartments(res.data))
     .catch(err => console.log(err));
   }
@@ -55,7 +55,7 @@ const ModalDepartment = ({
   const isValid = Object.keys(errMessage).length > 0;
 
   return (
-    <Modal show={showDepartmentPopup} onHide={handleClose}>
+    <Modal show={showDepartmentPopup}>
       <Modal.Body>
         <form onSubmit={onSubmit}>
           <div className="row row-cus pb-3">

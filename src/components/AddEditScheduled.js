@@ -46,13 +46,13 @@ const AddEditScheduled = () => {
   const handleClose = () => {
     setShowDepartmentPopup(false);
     setSelectDepartment('');
-    if(!item) {
-      setFormData((formData)=>({
-        ...formData,
-        departmentCode: '',
-        departmentName: '',
-      }));
-    }
+    // if(!item) {
+    setFormData((formData)=>({
+      ...formData,
+      departmentCode: '',
+      departmentName: '',
+    }));
+    // }
     GET(API_URL_DEPARTMENT)
       .then(res => res && res.data && setDepartments(res.data))
       .catch(err => console.log(err));
@@ -118,11 +118,17 @@ const AddEditScheduled = () => {
 
   useEffect(() => {
     if(item) {
-      POST(API_URL_DETAIL, {id: item.DENPYONO})
+      GET(API_URL_DETAIL, {id: item.DENPYONO})
       .then(res => res && res.data && setDetails(res.data))
       .catch(err => console.log(err));
     }
   }, [item]);
+
+  useEffect(() => {
+    if(item) {
+      setSelectDepartment(item.BUMONCD_YKANR);
+    }
+  }, [item])
 
   const amounts = details && details.map(item => item.KINGAKU);
   const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
@@ -148,6 +154,7 @@ const AddEditScheduled = () => {
             [name]: value,
             departmentName: findItem.BUMONNM,
           });
+          setSelectDepartment(value);
           setDepartmentErr(null);
         } else {
           setFormData({
@@ -354,7 +361,6 @@ const AddEditScheduled = () => {
         </div>
       </div>
       <ModalDepartment 
-        department = {item}
         onChange={onChangeSelectDepartment}
         selectDepartment = {selectDepartment}
         setSelectDepartment = {setSelectDepartment}

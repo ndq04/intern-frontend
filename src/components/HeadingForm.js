@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { accountingMethods, API_URL_HEADING } from "../contance";
-import { POST } from "../utils/apiHelper";
+import { GET } from "../utils/apiHelper";
 // import useFetch from "../utils/useFetch";
 import { valid } from "../utils/valid";
 import InputDatePicker from "./DatePicker";
@@ -57,7 +57,7 @@ const HeadingForm = ({setData}) => {
   const onSubmit = (e) => {
     e.preventDefault();
     const data = {...formData};
-    POST(API_URL_HEADING, data)
+    GET(API_URL_HEADING, data)
     .then(res=> res && res.data && setData(res.data))
     .catch(err => console.log(err));
   }

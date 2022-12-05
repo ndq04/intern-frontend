@@ -14,10 +14,11 @@ export function POST(url, data) {
   });
 }
 
-export function GET(url) {
+export function GET(url, params) {
   return axios({
     method: 'GET',
     headers: { ...DEFAULT_OPTS },
     url,
+    params
   });
 }
