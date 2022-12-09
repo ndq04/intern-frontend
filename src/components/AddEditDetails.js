@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom"
-import { formatDate, setStorage } from "../utils/common";
+import { formatDate, getStorage, setStorage } from "../utils/common";
 import InputDatePicker from "./DatePicker"
 
 const AddEditDetails = () => {
@@ -11,38 +11,47 @@ const AddEditDetails = () => {
   const [detailStrg, setDetailStrg] = useState([]);
 
   const [state, setState] = useState({
-    date: '',
-    pointOfDeparture : '',
-    destination: '',
-    route: '',
-    money: '',
+    GYONO: Math.floor(Math.random() * 999999 + 1),
+    IDODT: '',
+    SHUPPATSUPLC : '',
+    MOKUTEKIPLC: '',
+    KEIRO: '',
+    KINGAKU: '',
     checkDelete: false
   });
-
+  
   useEffect(() => {
     if(detail) {
       setState((prevState) => ({
         ...prevState,
-        date: new Date(detail.IDODT),
-        pointOfDeparture: detail.SHUPPATSUPLC,
-        destination: detail.MOKUTEKIPLC,
-        route: detail.KEIRO,
-        money: detail.KINGAKU
+        IDODT: new Date(detail.IDODT),
+        SHUPPATSUPLC: detail.SHUPPATSUPLC,
+        MOKUTEKIPLC: detail.MOKUTEKIPLC,
+        KEIRO: detail.KEIRO,
+        KINGAKU: detail.KINGAKU,
+        // checkDelete: detail.checkDelete
       }))
     }
   }, [detail])
 
   useEffect(() => {
+    const data = getStorage(`detail_${item.DENPYONO}`);
+    if(data && data.length > 0) {
+      setDetailStrg(data)
+    }
+  }, [item.DENPYONO])
+
+  useEffect(() => {
     setStorage({
-      key: detailStrg,
-      val: `detail_${item.DENPYONO}`
+      key: `detail_${item.DENPYONO}` ,
+      val: detailStrg
     })
   }, [detailStrg, item.DENPYONO]);
 
   const onChangeDate = (value) => {
     setState({
       ...state,
-      date: value,
+      IDODT: value,
     })
   }
 
@@ -57,12 +66,27 @@ const AddEditDetails = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const data = {
+    let data;
+    if(detail) {
+      data = {
         ...state,
-        slipNumber: item.DENPYONO,
-        date: formatDate(state.date)
+        GYONO: detail.GYONO,
+        DENPYONO: item.DENPYONO,
+        IDODT: formatDate(state.IDODT)
       }
-    setDetailStrg(prev => ([...prev, data]));
+      const detailStrgTmp = [...detailStrg];
+      const findIndex = detailStrgTmp.findIndex(item => item && item.GYONO === data.GYONO);
+      detailStrgTmp[findIndex] = data;
+      setDetailStrg(detailStrgTmp);
+    } else {
+      data = {
+        ...state,
+        DENPYONO: item.DENPYONO,
+        IDODT: formatDate(state.IDODT)
+      }
+      setDetailStrg(prev => ([...prev, data]));
+    }
+    navigate(-1);
   }
 
   return (
@@ -74,9 +98,9 @@ const AddEditDetails = () => {
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">年月日</label>
               <InputDatePicker 
-                value={state.date} 
+                value={state.IDODT} 
                 onChange={onChangeDate} 
-                name="date" 
+                name="IDODT" 
               />
             </div>
           </div>
@@ -84,35 +108,42 @@ const AddEditDetails = () => {
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">出発地</label>
-              <input type="text" className="input-cus" name="pointOfDeparture" value={state.pointOfDeparture} onChange={onChange}/>
+              <input type="text" className="input-cus" name="SHUPPATSUPLC" value={state.SHUPPATSUPLC} onChange={onChange}/>
             </div>
           </div>
 
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">目的地</label>
-              <input type="text" className="input-cus" name="destination" value={state.destination} onChange={onChange}/>
+              <input type="text" className="input-cus" name="MOKUTEKIPLC" value={state.MOKUTEKIPLC} onChange={onChange}/>
             </div>
           </div>
 
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">経路</label>
-              <input type="text" className="input-cus" name="route" value={state.route} onChange={onChange}/>
+              <input type="text" className="input-cus" name="KEIRO" value={state.KEIRO} onChange={onChange}/>
             </div>
           </div>
 
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">金額</label>
-              <input type="text" className="input-cus" name="money" value={state.money} onChange={onChange}/>
+              <input type="text" className="input-cus" name="KINGAKU" value={state.KINGAKU} onChange={onChange}/>
             </div>
           </div>
           
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
-              <label htmlFor="check-delete" className="label" style={{cursor:'pointer'}}>削除</label>
-              <input className="form-check-input" type="checkbox" value={state.checkDelete} id="check-delete" style={{cursor:'pointer'}} name="checkDelete" onChange={onChange}/>
+              <label htmlFor="check-delete" className="label" style={{cursor: detail ? 'pointer' : 'not-allowed', color: detail ? '' : '#999'}}>削除</label>
+              <input 
+                className="form-check-input" 
+                type="checkbox" value={state.checkDelete} 
+                id="check-delete" style={{cursor: detail ? 'pointer' : ''}} 
+                name="checkDelete" onChange={onChange}
+                disabled={!detail}
+                // checked={state.checkDelete}
+              />
             </div>
           </div>
 

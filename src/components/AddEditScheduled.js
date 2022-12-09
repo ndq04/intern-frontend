@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { API_URL_ADD_SCHEDULED, API_URL_DELETE_SCHEDULED, API_URL_DEPARTMENT, API_URL_DETAIL, API_URL_UPDATE_SCHEDULED } from "../contance";
+import { API_URL_ADD_DETAIL, API_URL_ADD_SCHEDULED, API_URL_DELETE_SCHEDULED, API_URL_DEPARTMENT, API_URL_DETAIL, API_URL_UPDATE_SCHEDULED } from "../contance";
 import { GET, POST } from "../utils/apiHelper";
-import { formatDate } from "../utils/common";
+import { formatDate, getStorage, removeStorage } from "../utils/common";
 import { valid } from "../utils/valid";
 import InputDatePicker from "./DatePicker";
 import { accountingMethods, years } from "../contance";
@@ -16,6 +16,7 @@ const AddEditScheduled = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const item = location.state && location.state.item;
+  const dataStorage = item && getStorage(`detail_${item.DENPYONO}`);
 
   const [formData, setFormData] = useState({
     slipNumber: '',
@@ -128,10 +129,15 @@ const AddEditScheduled = () => {
     if(item) {
       setSelectDepartment(item.BUMONCD_YKANR);
     }
-  }, [item])
+  }, [item]);
 
   const amounts = details && details.map(item => item.KINGAKU);
+  const amounts1 = dataStorage && dataStorage.map(item => Number(item.KINGAKU));
+
   const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
+  const moneys1 = amounts1 && amounts1.reduce((a, b) => a + b, 0);
+
+  const sums = moneys + moneys1;
 
   const onChange = (e) =>{
     const {name, value} = e.target;
@@ -181,20 +187,27 @@ const AddEditScheduled = () => {
   }
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const checkValid = !!formData.accountingMethod && !!formData.paymentDueDate && !!formData.applicationDateDate && !!formData.departmentCode;
-    if(!checkValid) {
-      handleShowError();
-      return;
-    }
-    const data = {...formData};
     try {
+      const checkValid = !!formData.accountingMethod && !!formData.paymentDueDate && !!formData.applicationDateDate && !!formData.departmentCode;
+      if(!checkValid) {
+        handleShowError();
+        return;
+      }
+      const data = {...formData};
+      if(dataStorage) {
+        const dataDetail = [...dataStorage].filter(item => item && !item.checkDelete);
+        if(dataDetail.length > 0) {
+          await POST(API_URL_ADD_DETAIL, dataDetail);
+          // removeStorage(`detail_${item.DENPYONO}`);
+        }
+      }
       const res = item ? await POST(API_URL_UPDATE_SCHEDULED, data) : await POST(API_URL_ADD_SCHEDULED, data);
       if(res && res.status === 200) {
-        const {insertId} = res.data.result;
-        const id = item ? item.DENPYONO : insertId;
-        setId(id);
-        show();
-      }
+          const {insertId} = res.data.result;
+          const id = item ? item.DENPYONO : insertId;
+          setId(id);
+          show();
+        }
     } catch (error) {
       console.log(error);
     }
@@ -308,10 +321,10 @@ const AddEditScheduled = () => {
         <div className="heading">交通費</div>
         <div className="panel-body">
           <table className="table table-bordered">
-            <thead className="table-secondary">
+            <thead className="table-primary">
               <tr>
                 <th className="is-center"><span className="mb0 nowrap ct-custom bbw">行</span></th>
-                {item && details.length >0 && <th className="is-center"><span className="mb0 nowrap ct-custom bbw">伝票番号</span></th>}
+                {/* {item && details.length > 0 && <th className="is-center"><span className="mb0 nowrap ct-custom bbw">伝票番号</span></th>} */}
                 <th className="is-center"><span className="mb0 nowrap ct-custom bbw">年月日</span></th>
                 <th className="is-center"><span className="mb0 nowrap ct-custom bbw">出発地</span></th>
                 <th className="is-center"><span className="mb0 nowrap ct-custom bbw">目的地</span></th>
@@ -326,10 +339,38 @@ const AddEditScheduled = () => {
                     <td>
                       <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detail, item}}>{index + 1}</Link>
                     </td>
-                    {item && details.length > 0 &&
+                    {/* {item && details.length > 0 &&
                     <td>
                       <span>{detail.DENPYONO}</span>
-                    </td>}
+                    </td>} */}
+                    <td>
+                      <span>{detail.IDODT}</span>
+                    </td>
+                    <td>
+                      <span>{detail.SHUPPATSUPLC}</span>
+                    </td>
+                    <td>
+                      <span>{detail.MOKUTEKIPLC}</span>
+                    </td>
+                    <td>
+                      <span>{detail.KEIRO}</span>
+                    </td>
+                    <td>
+                      <span>{detail.KINGAKU}</span>
+                    </td>
+                  </tr>
+                )) 
+              }
+              {
+                dataStorage && dataStorage.length > 0 && dataStorage.map((detail, index) => (
+                  <tr key={index} style={{background : detail.checkDelete ? '#8f9092' : '', opacity: detail.checkDelete ? '0.8' : ''}}>
+                    <td>
+                    <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detail, item}}>{index + 1}</Link>
+                    </td>
+                    {/* {item && details.length > 0 &&
+                    <td>
+                      <span>{detail.DENPYONO}</span>
+                    </td>} */}
                     <td>
                       <span>{detail.IDODT}</span>
                     </td>
@@ -350,11 +391,12 @@ const AddEditScheduled = () => {
               }
                 <tr>
                   <td></td>
+                  {/* {item && details.length > 0 && <td></td>} */}
                   <td></td>
                   <td></td>
                   <td></td>
                   <td>交通費計</td>
-                  <td>{moneys}</td>
+                  <td>{sums}</td>
                 </tr>
             </tbody>
           </table>

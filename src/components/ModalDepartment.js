@@ -83,7 +83,7 @@ const ModalDepartment = ({
 
         <div className="panel-body">
             <table className="table table-bordered">
-              <thead className="table-secondary">
+              <thead className="table-primary">
                 <tr>
                   <th className="is-center"><span className="mb0 nowrap ct-custom bbw">選択</span></th>
                   <th className="is-center"><span className="mb0 nowrap ct-custom bbw">部門コード</span></th>

@@ -6,12 +6,12 @@ export const formatDate = (value) => {
 };
 
 export const setStorage = ({ key, val }) => {
-  localStorage.setItem(JSON.stringify(key), val);
+  localStorage.setItem(key, JSON.stringify(val));
 };
 
 export const getStorage = (key) => {
-  const json = JSON.parse(localStorage.getItem(key));
-  return json ? json : [];
+  return JSON.parse(localStorage.getItem(key));
+  // return json ? json : [];
 };
 
 export const removeStorage = (key) => {

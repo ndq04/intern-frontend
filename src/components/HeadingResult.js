@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { formatDate } from "../utils/common";
-const HeadingResult = ({data}) => {
-const amounts = data && data.map(item => item.KINGAKU);
-const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
+const HeadingResult = ({ data }) => {
+  const amounts = data && data.map(item => item.KINGAKU);
+  const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
 
   return (
     <div className="container">
@@ -15,7 +15,7 @@ const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
         {data && data.length > 0 ? (
           <div className="panel-body">
             <table className="table table-bordered">
-              <thead className="table-secondary">
+              <thead className="table-primary">
                 <tr>
                   <th className="is-center"><span className="mb0 nowrap ct-custom bbw">行</span></th>
                   <th className="is-center"><span className="mb0 nowrap ct-custom bbw">伝票番号</span></th>
@@ -29,13 +29,13 @@ const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
                 </tr>
               </thead>
               <tbody>
-                {data.map((item, index)=>(
+                {data.map((item, index) => (
                   <tr key={index}>
                     <td>
                       <span>{index + 1}</span>
                     </td>
                     <td>
-                      <Link to={{pathname : '/scheduled', hash: `${item.DENPYONO}`}} state={{item}}>{item.DENPYONO}</Link>
+                      <Link to={{ pathname: '/scheduled', hash: `${item.DENPYONO}` }} state={{ item }}>{item.DENPYONO}</Link>
                     </td>
                     <td>
                       <span>{item.BUMONNM}</span>
@@ -59,24 +59,24 @@ const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
                       <span><input type="checkbox" name="" id="" /></span>
                     </td>
                   </tr>
-                  ))}
-                  <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>交通費計</td>
-                    <td>{moneys}</td>
-                    <td></td>
-                  </tr>
+                ))}
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>交通費計</td>
+                  <td>{moneys}</td>
+                  <td></td>
+                </tr>
               </tbody>
             </table>
           </div>
-          ) :(
-            <div>検索結果がありません。</div>
-          )}
+        ) : (
+          <div>検索結果がありません。</div>
+        )}
       </div>
     </div>
   )
