@@ -20,7 +20,10 @@ const ModalDelete = ({show, hide, id, setShowDelete}) => {
         <Button variant="warning" onClick={hide}>
           はい
         </Button>
-        <Button variant="danger" onClick={()=>setShowDelete(false)}>
+        <Button variant="danger" onClick={()=>setShowDelete(prevState => ({
+          ...prevState,
+          showDelete: false,
+        }))}>
           いいえ
         </Button>
       </Modal.Footer>

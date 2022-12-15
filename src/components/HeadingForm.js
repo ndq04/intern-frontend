@@ -19,34 +19,34 @@ const HeadingForm = ({setData}) => {
     accountingMethod2: '',
   });
 
-  // const {data} = useFetch(API_URL_HEADING, 'GET');
-  // const dataTmp = data && data.map(item=> item.SUITOKB);
-  // const accountingMethod = dataTmp && Array.from(new Set(dataTmp));
-
   const onChange = (e) =>{
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     })
   }
+
   const onChangeStartDate = (value) => {
     setFormData({
       ...formData,
       startDate: value,
     })
   }
+
   const onChangeEndDate = (value) => {
     setFormData({
       ...formData,
       endDate: value,
     })
   }
+
   const onChangeSlipDateFrom = (value) => {
     setFormData({
       ...formData,
       slipDate_from: value,
     })
   }
+  
   const onChangeSlipDateTo = (value) => {
     setFormData({
       ...formData,

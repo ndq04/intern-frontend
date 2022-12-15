@@ -21,6 +21,24 @@ export const valid = (data) => {
     err.departmentCode = 'Mã không hợp lệ. Vui lòng nhập số !';
   }
 
+  if ((data.KINGAKU && !numbers.test(data.KINGAKU))) {
+    err.KINGAKU = 'Mã không hợp lệ. Vui lòng nhập số !';
+  } else if (data.KINGAKU === '') {
+    err.KINGAKU = 'Yêu cầu nhập !';
+  }
+
+  if (data.IDODT === '') {
+    err.IDODT = 'Yêu cầu nhập !';
+  }
+
+  if (data.SHUPPATSUPLC === '' || (data.SHUPPATSUPLC && !data.SHUPPATSUPLC.trim())) {
+    err.SHUPPATSUPLC = 'Yêu cầu nhập !';
+  }
+
+  if (data.MOKUTEKIPLC === '' || (data.MOKUTEKIPLC && !data.MOKUTEKIPLC.trim())) {
+    err.MOKUTEKIPLC = 'Yêu cầu nhập !';
+  }
+
   // if(!data.accountingMethod) {
   //   err.accountingMethod = 'Trường bắt buộc !'
   // }

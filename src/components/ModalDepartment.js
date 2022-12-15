@@ -5,7 +5,7 @@ import { API_URL_DEPARTMENT } from '../contance';
 import { valid } from '../utils/valid';
 
 const ModalDepartment = ({
-  selectDepartment, setSelectDepartment, departments, setDepartments, showDepartmentPopup, close, onChange, setFormData, setDepartmentErr
+  close, onChange, parentState, setParentState
 }) => {
 
   const [state, setState] = useState({
@@ -16,6 +16,7 @@ const ModalDepartment = ({
   const handleChange = value => {
     onChange(value);
   }
+
   const handleClose = () => {
     close();
     setState({
@@ -23,16 +24,20 @@ const ModalDepartment = ({
       departmentName: ''
     })
   }
+  
   const handleSave = () => {
     handleClose();
-    setSelectDepartment(selectDepartment);
-    const findItem = departments.find(item => item.BUMONCD === selectDepartment);
-    setFormData((formData)=>({
-      ...formData,
-      departmentCode: selectDepartment,
-      departmentName: findItem.BUMONNM,
+    const findItem = parentState.departments.find(item => item.BUMONCD === parentState.selectDepartment);
+    setParentState((prevState)=>({
+      ...prevState,
+      formData: {
+        ...prevState.formData,
+        departmentCode: parentState.selectDepartment,
+        departmentName: findItem.BUMONNM,
+      },
+      departmentErr: '',
+      selectDepartment: parentState.selectDepartment
     }));
-    setDepartmentErr('');
   }
 
   const handleChangeForm = (e) => {
@@ -45,17 +50,25 @@ const ModalDepartment = ({
 
   const onSubmit = (e) => {
     e.preventDefault();
-    const data = {...state};
+    const data = {
+      ...state,
+      departmentName: state.departmentName.trim(),
+    };
 
     GET(API_URL_DEPARTMENT, data)
-    .then(res=> res && res.data && setDepartments(res.data))
+    .then(res=> res && res.data &&
+      setParentState(prevState => ({
+        ...prevState,
+        departments: res.data,
+      })) 
+    )
     .catch(err => console.log(err));
   }
   const {errMessage} = valid(state);
   const isValid = Object.keys(errMessage).length > 0;
 
   return (
-    <Modal show={showDepartmentPopup}>
+    <Modal show={parentState.showDepartmentPopup}>
       <Modal.Body>
         <form onSubmit={onSubmit}>
           <div className="row row-cus pb-3">
@@ -92,7 +105,7 @@ const ModalDepartment = ({
               </thead>
               <tbody>
                 {
-                  departments.map((item, index) => (
+                  parentState.departments.map((item, index) => (
                     <tr key={index}>
                       <td>
                       <div className="form-check">
@@ -101,7 +114,7 @@ const ModalDepartment = ({
                           className="form-check-input" 
                           type="radio" 
                           style={{cursor:'pointer'}}
-                          checked={selectDepartment === item.BUMONCD}
+                          checked={parentState.selectDepartment === item.BUMONCD}
                           onChange={() => handleChange(item.BUMONCD)}
                         />
                       </div>
@@ -120,7 +133,7 @@ const ModalDepartment = ({
           </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="primary" onClick={handleSave} disabled={!selectDepartment}>
+        <Button variant="primary" onClick={handleSave} disabled={!parentState.selectDepartment}>
           選択
         </Button>
         <Button variant="secondary" onClick={handleClose}>

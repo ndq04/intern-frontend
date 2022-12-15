@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { API_URL_ADD_DETAIL, API_URL_ADD_SCHEDULED, API_URL_DELETE_SCHEDULED, API_URL_DEPARTMENT, API_URL_DETAIL, API_URL_UPDATE_SCHEDULED } from "../contance";
+import { 
+  API_URL_ADD_DETAIL, 
+  API_URL_ADD_SCHEDULED, 
+  API_URL_DELETE_SCHEDULED, 
+  API_URL_DEPARTMENT, 
+  API_URL_DETAIL, 
+  API_URL_UPDATE_SCHEDULED 
+} from "../contance";
 import { GET, POST } from "../utils/apiHelper";
 import { formatDate, getStorage, removeStorage } from "../utils/common";
 import { valid } from "../utils/valid";
@@ -17,50 +24,8 @@ const AddEditScheduled = () => {
   const navigate = useNavigate();
   const item = location.state && location.state.item;
   const dataStorage = item && getStorage(`detail_${item.DENPYONO}`);
-
-  const [formData, setFormData] = useState({
-    slipNumber: '',
-    slipDate: formatDate(new Date()),
-    accountingMethod: '',
-    paymentDueDate: '',
-    year: 2022,
-    applicationDateDate: '',
-    departmentCode: '',
-    departmentName: '',
-    comment: ''
-  });
-  
-  const [errMessage, setErrMessage] = useState(null);
-  const [isValid, setIsValid] = useState(false);
-  const [departmentErr, setDepartmentErr] = useState(null);
-  const [departments, setDepartments] = useState([]);
-  const [showDepartmentPopup, setShowDepartmentPopup] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showError, setShowError] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
-  const [isDel, setIsDel] = useState(false);
-  const [id, setId] = useState('');
-  const [details, setDetails] = useState([]);
-
-  const [selectDepartment, setSelectDepartment] = useState('');
-  const handleShow = () => setShowDepartmentPopup(true);
-  const handleClose = () => {
-    setShowDepartmentPopup(false);
-    setSelectDepartment('');
-    // if(!item) {
-    setFormData((formData)=>({
-      ...formData,
-      departmentCode: '',
-      departmentName: '',
-    }));
-    // }
-    GET(API_URL_DEPARTMENT)
-      .then(res => res && res.data && setDepartments(res.data))
-      .catch(err => console.log(err));
-  };
-  const show = () => setShowSuccess(true);
-  const hide = () => {
-    setFormData({
+  const [state, setState] = useState({
+    formData : {
       slipNumber: '',
       slipDate: formatDate(new Date()),
       accountingMethod: '',
@@ -70,68 +35,163 @@ const AddEditScheduled = () => {
       departmentCode: '',
       departmentName: '',
       comment: ''
-    })
-    setShowSuccess(false);
+    },
+    errMessage: null,
+    isValid: false,
+    departmentErr: null,
+    departments: [],
+    showDepartmentPopup: false,
+    showSuccess: false,
+    showError: false,
+    showDelete: false,
+    isDel: false,
+    id: null,
+    details: [],
+    selectDepartment: '',
+  });
+
+  const handleShow = () => setState(prevState => ({
+    ...prevState,
+    showDepartmentPopup: true,
+  }));
+  const handleClose = () => {
+    // if(!item) {
+    setState((prevState)=>({
+      ...prevState,
+      formData : {
+        ...prevState.formData,
+        departmentCode: '',
+        departmentName: '',
+      },
+      showDepartmentPopup: false,
+      selectDepartment: '',
+    }));
+    // }
+    GET(API_URL_DEPARTMENT)
+      .then(res => res && res.data &&
+        setState(prevState => ({
+          ...prevState,
+          departments: res.data
+        }))
+      )
+      .catch(err => console.log(err));
+  };
+  const show = () => setState(prevState => ({
+    ...prevState,
+    showSuccess: true,
+  }));
+  const hide = () => {
+    setState(prevState => ({
+      ...prevState,
+      formData: {
+        slipNumber: '',
+        slipDate: formatDate(new Date()),
+        accountingMethod: '',
+        paymentDueDate: '',
+        year: 2022,
+        applicationDateDate: '',
+        departmentCode: '',
+        departmentName: '',
+        comment: ''
+      },
+      showSuccess: false,
+    }))
     navigate('/');
   };
 
-  const handleShowError = () => setShowError(true);
-  const handleHideError = () => setShowError(false);
+  const handleShowError = () => setState(prevState => ({
+    ...prevState,
+    showError: true,
+  }));
 
-  const handleShowDel = () => setShowDelete(true);
+  const handleHideError = () => setState(prevState => ({
+    ...prevState,
+    showError: false,
+  }));
+
+  const handleShowDel = () => setState(prevState => ({
+    ...prevState,
+    showDelete: true,
+  }));
+  
   const handleHideDel = async () => {
     const id = item && item.DENPYONO;
     const res =  await POST(API_URL_DELETE_SCHEDULED, {id});
     if(res.status === 200) {
       show();
-      setShowDelete(false);
+      setState(prevState => ({
+        ...prevState,
+        showDelete: false,
+      }));
     }
   };
 
   useEffect(() => {
     if(item) {
-      setFormData((formData)=>({
-        ...formData,
-        slipNumber: item.DENPYONO,
-        slipDate: formatDate(item.DENPYODT),
-        accountingMethod: item.SUITOKB,
-        paymentDueDate: new Date(item.SHIHARAIDT),
-        applicationDateDate: new Date(item.UKETUKEDT),
-        departmentCode: item.BUMONCD_YKANR,
-        departmentName: item.BUMONNM,
-        comment: item.BIKO,
+      setState((prevState)=>({
+        ...prevState,
+        formData: {
+          ...prevState.formData,
+          slipNumber: item.DENPYONO,
+          slipDate: formatDate(item.DENPYODT),
+          accountingMethod: item.SUITOKB,
+          paymentDueDate: new Date(item.SHIHARAIDT),
+          applicationDateDate: new Date(item.UKETUKEDT),
+          departmentCode: item.BUMONCD_YKANR,
+          departmentName: item.BUMONNM,
+          comment: item.BIKO,
+        }
       }));
     }
   }, [item]);
 
   useEffect(() => {
-    const {errMessage} = valid(formData);
-    const isValid = Object.keys(errMessage).length > 0 || departmentErr ;
-    setErrMessage(errMessage);
-    setIsValid(isValid);
-  },[formData, departmentErr]);
+    const {errMessage} = valid(state.formData);
+    const isValid = Object.keys(errMessage).length > 0 || state.departmentErr ;
+    setState(prevState => ({
+      ...prevState,
+      errMessage
+    }));
+    setState(prevState => ({
+      ...prevState,
+      isValid
+    }));
+  },[state.formData, state.departmentErr]);
 
   useEffect(() => {
     GET(API_URL_DEPARTMENT)
-      .then(res => res && res.data && setDepartments(res.data))
+      .then(res => res && res.data && 
+        setState(prevState => ({
+          ...prevState,
+          departments: res.data,
+        }))
+      )
       .catch(err => console.log(err));
   }, []);
 
   useEffect(() => {
     if(item) {
       GET(API_URL_DETAIL, {id: item.DENPYONO})
-      .then(res => res && res.data && setDetails(res.data))
+      .then(res => res && res.data && 
+        setState(prevState => ({
+          ...prevState,
+          details: res.data,
+        }))
+      )
       .catch(err => console.log(err));
     }
   }, [item]);
 
   useEffect(() => {
     if(item) {
-      setSelectDepartment(item.BUMONCD_YKANR);
+      setState(prevState => ({
+        ...prevState,
+        selectDepartment: item.BUMONCD_YKANR,
+      }))
     }
   }, [item]);
 
-  const amounts = details && details.map(item => item.KINGAKU);
+  const amounts = state.details.length > 0 && state.details.map(item => item.KINGAKU);
   const amounts1 = dataStorage && dataStorage.map(item => Number(item.KINGAKU));
 
   const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
@@ -141,59 +201,77 @@ const AddEditScheduled = () => {
 
   const onChange = (e) =>{
     const {name, value} = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setState(prevState => ({
+      ...prevState,
+      formData : {
+        ...prevState.formData,
+        [name]: value,
+      }
+    }));
     if(name === 'departmentCode') {
       if(!value || value === '') {
-        setFormData((formData) => ({
-          ...formData,
-          departmentName: '',
-        }));
-        setDepartmentErr('Trường bắt buộc nhập');
-      } else {
-        const findItem = departments.find(item => item.BUMONCD === value);
-        if(findItem) {
-          setFormData({
-            ...formData,
-            [name]: value,
-            departmentName: findItem.BUMONNM,
-          });
-          setSelectDepartment(value);
-          setDepartmentErr(null);
-        } else {
-          setFormData({
-            ...formData,
-            [name]: value,
+        setState((prevState) => ({
+          ...prevState,
+          formData : {
+            ...prevState.formData,
             departmentName: '',
-          });
-          setDepartmentErr('Trường bắt buộc nhập');
+          },
+          departmentErr: 'Trường bắt buộc nhập',
+        }));
+      } else {
+        const findItem = state.departments.find(item => item.BUMONCD === value);
+        if(findItem) {
+          setState(prevState => ({
+            ...prevState,
+            formData: {
+              ...prevState.formData,
+              [name]: value,
+              departmentName: findItem.BUMONNM,
+            },
+            departmentErr: null,
+            selectDepartment: value,
+          }));
+        } else {
+          setState(prevState => ({
+            ...prevState,
+            formData: {
+              ...prevState.formData, 
+              [name]: value,
+              departmentName: '',
+            },
+            departmentErr: 'Trường bắt buộc nhập',
+          }));
         }
       }
     }
   }
   const onChangePaymentDueDate = (value) => {
-    setFormData({
-      ...formData,
-      paymentDueDate: value,
-    })
+    setState(prevState => ({
+      ...prevState,
+      formData: {
+        ...prevState.formData,
+        paymentDueDate: value,
+      }
+    }))
   }
   const onChangeApplicationDateDate = (value) => {
-    setFormData({
-      ...formData,
-      applicationDateDate: value,
-    })
+    setState(prevState => ({
+      ...prevState,
+      formData: {
+        ...prevState.formData,
+        applicationDateDate: value,
+      }
+    }))
   }
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const checkValid = !!formData.accountingMethod && !!formData.paymentDueDate && !!formData.applicationDateDate && !!formData.departmentCode;
+      const checkValid = !!state.formData.accountingMethod && !!state.formData.paymentDueDate && !!state.formData.applicationDateDate && !!state.formData.departmentCode;
       if(!checkValid) {
         handleShowError();
         return;
       }
-      const data = {...formData};
+      const data = {...state.formData};
       if(dataStorage) {
         const dataDetail = [...dataStorage].filter(item => item && !item.checkDelete);
         if(dataDetail.length > 0) {
@@ -205,7 +283,10 @@ const AddEditScheduled = () => {
       if(res && res.status === 200) {
           const {insertId} = res.data.result;
           const id = item ? item.DENPYONO : insertId;
-          setId(id);
+          setState(prevState => ({
+            ...prevState,
+            id
+          }));
           show();
         }
     } catch (error) {
@@ -213,14 +294,20 @@ const AddEditScheduled = () => {
     }
   }
   const handleConfirmDelete = (e) => {
-    setIsDel(true);
     const id = item && item.DENPYONO;
-    setId(id);
+    setState(prevState => ({
+      ...prevState,
+      isDel: true,
+      id,
+    }));
     handleShowDel();
   }
 
   const onChangeSelectDepartment = (value) => {
-    setSelectDepartment(value);
+    setState(prevState => ({
+      ...prevState,
+      selectDepartment: value,
+    }));
   }
 
   return (
@@ -231,11 +318,11 @@ const AddEditScheduled = () => {
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex">
               <label htmlFor="" className="label">伝票番号</label>
-              <input disabled type="text" className="input-disabled" value={formData.slipNumber} name="slipNumber"/>
+              <input disabled type="text" className="input-disabled" value={state.formData.slipNumber} name="slipNumber"/>
             </div>
             <div className="col-md-4"></div>
             <div className="col-md-4">
-              <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleSubmit} disabled={isValid}>登録</button>
+              <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleSubmit} disabled={state.isValid}>登録</button>
               <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleConfirmDelete} disabled={!item}>削除</button>
               <button onClick={() => navigate(-1) } type="button" className="btn btn-primary">終了</button>
             </div>
@@ -244,11 +331,11 @@ const AddEditScheduled = () => {
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">伝票日付</label>
-              <input disabled type="text" className="input-disabled" value={formData.slipDate} name="slipDate"/>
+              <input disabled type="text" className="input-disabled" value={state.formData.slipDate} name="slipDate"/>
             </div>
             <div className="col-md-4 d-flex">
               <label htmlFor="" className="label">出納方法</label>
-              <select className="input-cus" value={formData.accountingMethod} onChange={onChange} name="accountingMethod">
+              <select className="input-cus" value={state.formData.accountingMethod} onChange={onChange} name="accountingMethod">
                 <option value=''></option>
                 {
                   accountingMethods.map((item, index) => (
@@ -260,7 +347,7 @@ const AddEditScheduled = () => {
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">支払予定日</label>
               <InputDatePicker 
-                value={formData.paymentDueDate} 
+                value={state.formData.paymentDueDate} 
                 onChange={onChangePaymentDueDate} 
                 name="paymentDueDate" 
               />
@@ -270,7 +357,7 @@ const AddEditScheduled = () => {
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex">
               <label htmlFor="" className="label">年度</label>
-              <select className="input-cus" value={formData.year} onChange={onChange} name="year">
+              <select className="input-cus" value={state.formData.year} onChange={onChange} name="year">
                 {
                   years.map((item, index) => (
                     <option key={index} value={item}>{item}</option>
@@ -284,7 +371,7 @@ const AddEditScheduled = () => {
             <div className="col-md-4 d-flex"> 
               <label htmlFor="" className="label">申請日</label>
               <InputDatePicker 
-                value={formData.applicationDateDate} 
+                value={state.formData.applicationDateDate} 
                 onChange={onChangeApplicationDateDate} 
                 name="applicationDateDate" 
               />
@@ -294,14 +381,14 @@ const AddEditScheduled = () => {
           <div className="row row-cus pb-4">
             <div className="col-md-12 d-flex" style={{alignItems: 'center'}}>
               <label htmlFor="" className="label">起票部門</label>
-              <input type="text" className="input-cus" value={formData.departmentCode} onChange={onChange} name="departmentCode" style={{marginRight:10}}/>
-              <input disabled type="text" className="input-disabled" value={formData.departmentName} style={{marginRight:10}}/>
+              <input type="text" className="input-cus" value={state.formData.departmentCode} onChange={onChange} name="departmentCode" style={{marginRight:10}}/>
+              <input disabled type="text" className="input-disabled" value={state.formData.departmentName} style={{marginRight:10}}/>
               <button type="button" className="btn btn-primary" onClick={handleShow}>ガ</button>
-              {errMessage && errMessage.departmentCode && <div style={{marginLeft:10}}>
-                <span className="text-danger">{errMessage.departmentCode}</span>
+              {state.errMessage && state.errMessage.departmentCode && <div style={{marginLeft:10}}>
+                <span className="text-danger">{state.errMessage.departmentCode}</span>
               </div>}
-              {departmentErr && <div style={{marginLeft:10}}>
-                <span className="text-danger">{departmentErr}</span>
+              {state.departmentErr && <div style={{marginLeft:10}}>
+                <span className="text-danger">{state.departmentErr}</span>
               </div>}
             </div>
           </div>
@@ -311,7 +398,7 @@ const AddEditScheduled = () => {
                 <br />
                 (備考)
               </label>
-              <input type="text" className="input-cus" value={formData.comment} onChange={onChange} name="comment"/>
+              <input type="text" className="input-cus" value={state.formData.comment} onChange={onChange} name="comment"/>
             </div>
             <div className="col-md-8" style={{display:'flex', justifyContent:'flex-end'}}>
               <button type="button" className="btn btn-primary" disabled={!item} onClick={() => navigate('/details', {state: {item}})}>明細追加</button>
@@ -334,7 +421,7 @@ const AddEditScheduled = () => {
             </thead>
             <tbody>
               {
-                details && details.length > 0 && details.map((detail, index) => (
+                state.details.length > 0 && state.details.map((detail, index) => (
                   <tr key={index}>
                     <td>
                       <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detail, item}}>{index + 1}</Link>
@@ -404,18 +491,13 @@ const AddEditScheduled = () => {
       </div>
       <ModalDepartment 
         onChange={onChangeSelectDepartment}
-        selectDepartment = {selectDepartment}
-        setSelectDepartment = {setSelectDepartment}
-        departments = {departments}
-        setDepartments = {setDepartments}
-        showDepartmentPopup = {showDepartmentPopup}
         close = {handleClose}
-        setFormData = {setFormData}
-        setDepartmentErr = {setDepartmentErr}
+        parentState = {state}
+        setParentState = {setState}
       />
-      <ModalSuccess show={showSuccess} hide={hide} id={id} setId={setId} item={item} isDel={isDel}/>
-      <ModalError show={showError} hide={handleHideError} item={item}/>
-      <ModalDelete show={showDelete} hide={handleHideDel} id={id} setShowDelete={setShowDelete}/>
+      <ModalSuccess show={state.showSuccess} hide={hide} id={state.id} item={item} isDel={state.isDel}/>
+      <ModalError show={state.showError} hide={handleHideError} item={item}/>
+      <ModalDelete show={state.showDelete} hide={handleHideDel} id={state.id} setShowDelete={setState}/>
     </div>
   )
 }
