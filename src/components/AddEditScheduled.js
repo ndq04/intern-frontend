@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
   API_URL_ADD_DETAIL, 
   API_URL_ADD_SCHEDULED, 
+  API_URL_DELETE_DETAIL, 
   API_URL_DELETE_SCHEDULED, 
   API_URL_DEPARTMENT, 
   API_URL_DETAIL, 
@@ -24,21 +25,21 @@ const AddEditScheduled = () => {
   const navigate = useNavigate();
   const item = location.state && location.state.item;
   const dataStorage = item && getStorage(`detail_${item.DENPYONO}`);
+
   const [state, setState] = useState({
     formData : {
       slipNumber: '',
       slipDate: formatDate(new Date()),
       accountingMethod: '',
-      paymentDueDate: '',
+      paymentDueDate: null,
       year: 2022,
-      applicationDateDate: '',
+      applicationDate: null,
       departmentCode: '',
       departmentName: '',
       comment: ''
     },
-    errMessage: null,
+    errMessage: {},
     isValid: false,
-    departmentErr: null,
     departments: [],
     showDepartmentPopup: false,
     showSuccess: false,
@@ -48,6 +49,10 @@ const AddEditScheduled = () => {
     id: null,
     details: [],
     selectDepartment: '',
+    accountingMethodErr: null,
+    paymentDueDateErr: null,
+    applicationDateErr: null,
+    departmentErr: null,
   });
 
   const handleShow = () => setState(prevState => ({
@@ -65,6 +70,7 @@ const AddEditScheduled = () => {
       },
       showDepartmentPopup: false,
       selectDepartment: '',
+      departmentErr: 'Yêu cầu nhập !'
     }));
     // }
     GET(API_URL_DEPARTMENT)
@@ -89,7 +95,7 @@ const AddEditScheduled = () => {
         accountingMethod: '',
         paymentDueDate: '',
         year: 2022,
-        applicationDateDate: '',
+        applicationDate: '',
         departmentCode: '',
         departmentName: '',
         comment: ''
@@ -136,7 +142,7 @@ const AddEditScheduled = () => {
           slipDate: formatDate(item.DENPYODT),
           accountingMethod: item.SUITOKB,
           paymentDueDate: new Date(item.SHIHARAIDT),
-          applicationDateDate: new Date(item.UKETUKEDT),
+          applicationDate: new Date(item.UKETUKEDT),
           departmentCode: item.BUMONCD_YKANR,
           departmentName: item.BUMONNM,
           comment: item.BIKO,
@@ -147,7 +153,8 @@ const AddEditScheduled = () => {
 
   useEffect(() => {
     const {errMessage} = valid(state.formData);
-    const isValid = Object.keys(errMessage).length > 0 || state.departmentErr ;
+    const {accountingMethod, paymentDueDate, applicationDate, departmentCode, } = state.formData
+    const isValid = Object.keys(errMessage).length > 0 || state.departmentErr || accountingMethod === '' || !paymentDueDate || !applicationDate || departmentCode === '' ;
     setState(prevState => ({
       ...prevState,
       errMessage
@@ -190,7 +197,6 @@ const AddEditScheduled = () => {
       }))
     }
   }, [item]);
-
   const amounts = state.details.length > 0 && state.details.map(item => item.KINGAKU);
   const amounts1 = dataStorage && dataStorage.map(item => Number(item.KINGAKU));
 
@@ -201,12 +207,17 @@ const AddEditScheduled = () => {
 
   const onChange = (e) =>{
     const {name, value} = e.target;
+    let accountingMethodErr = null;
+    if(name === 'accountingMethod') {
+      accountingMethodErr = value === '' ? 'Yêu cầu nhập !' : null;
+    }
     setState(prevState => ({
       ...prevState,
       formData : {
         ...prevState.formData,
         [name]: value,
-      }
+      },
+      accountingMethodErr
     }));
     if(name === 'departmentCode') {
       if(!value || value === '') {
@@ -216,7 +227,7 @@ const AddEditScheduled = () => {
             ...prevState.formData,
             departmentName: '',
           },
-          departmentErr: 'Trường bắt buộc nhập',
+          departmentErr: 'Yêu cầu nhập !',
         }));
       } else {
         const findItem = state.departments.find(item => item.BUMONCD === value);
@@ -239,44 +250,60 @@ const AddEditScheduled = () => {
               [name]: value,
               departmentName: '',
             },
-            departmentErr: 'Trường bắt buộc nhập',
+            departmentErr: 'Yêu cầu nhập !',
+            selectDepartment: '',
           }));
         }
       }
     }
   }
+
   const onChangePaymentDueDate = (value) => {
+    const paymentDueDateErr = !value ? 'Yêu cầu nhập !' : null;
     setState(prevState => ({
       ...prevState,
       formData: {
         ...prevState.formData,
         paymentDueDate: value,
-      }
+      },
+      paymentDueDateErr
     }))
   }
+
   const onChangeApplicationDateDate = (value) => {
+    const applicationDateErr = !value ? 'Yêu cầu nhập !' : null;
     setState(prevState => ({
       ...prevState,
       formData: {
         ...prevState.formData,
-        applicationDateDate: value,
-      }
+        applicationDate: value,
+      },
+      applicationDateErr
     }))
   }
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const checkValid = !!state.formData.accountingMethod && !!state.formData.paymentDueDate && !!state.formData.applicationDateDate && !!state.formData.departmentCode;
+      const checkValid = !!state.formData.accountingMethod && !!state.formData.paymentDueDate && !!state.formData.applicationDate && !!state.formData.departmentCode;
       if(!checkValid) {
         handleShowError();
         return;
       }
-      const data = {...state.formData};
-      if(dataStorage) {
-        const dataDetail = [...dataStorage].filter(item => item && !item.checkDelete);
-        if(dataDetail.length > 0) {
-          await POST(API_URL_ADD_DETAIL, dataDetail);
-          // removeStorage(`detail_${item.DENPYONO}`);
+      const {formData, details} = state;
+      const data = {...formData};
+      if(dataStorage && dataStorage.length > 0 ) {
+        const dataDetailStorage = [...dataStorage].filter(item => item && !item.CHECKDELETE);
+        if(dataDetailStorage.length > 0) {
+          await POST(API_URL_ADD_DETAIL, dataDetailStorage);
+          removeStorage(`detail_${item.DENPYONO}`);
+        }
+      }
+      if(details && details.length > 0) {
+        const dataDetailDB = [...details].filter(item => item && item.CHECKDELETE === 1);
+        if(dataDetailDB.length > 0) {
+          dataDetailDB.forEach(async item => {
+            await POST(API_URL_DELETE_DETAIL, item);
+          })
         }
       }
       const res = item ? await POST(API_URL_UPDATE_SCHEDULED, data) : await POST(API_URL_ADD_SCHEDULED, data);
@@ -316,7 +343,7 @@ const AddEditScheduled = () => {
       <div className="container">
         <form>
           <div className="row row-cus pb-4">
-            <div className="col-md-4 d-flex">
+            <div className="col-md-4 d-flex" style={{alignItems: 'center'}}>
               <label htmlFor="" className="label">伝票番号</label>
               <input disabled type="text" className="input-disabled" value={state.formData.slipNumber} name="slipNumber"/>
             </div>
@@ -329,13 +356,16 @@ const AddEditScheduled = () => {
           </div>
 
           <div className="row row-cus pb-4">
-            <div className="col-md-4 d-flex"> 
+            <div className="col-md-4 d-flex" style={{alignItems: 'center'}}> 
               <label htmlFor="" className="label">伝票日付</label>
               <input disabled type="text" className="input-disabled" value={state.formData.slipDate} name="slipDate"/>
             </div>
-            <div className="col-md-4 d-flex">
-              <label htmlFor="" className="label">出納方法</label>
-              <select className="input-cus" value={state.formData.accountingMethod} onChange={onChange} name="accountingMethod">
+            <div className="col-md-4 d-flex" style={{alignItems: 'center', position:'relative'}}>
+              <label htmlFor="" className="label">
+                出納方法
+                <span className="required">*</span>
+              </label>
+              <select className={state.accountingMethodErr ? "input-cus error" : "input-cus"} value={state.formData.accountingMethod} onChange={onChange} name="accountingMethod">
                 <option value=''></option>
                 {
                   accountingMethods.map((item, index) => (
@@ -343,19 +373,29 @@ const AddEditScheduled = () => {
                   ))
                 }
               </select>
+              {state.accountingMethodErr && <div style={{position: 'absolute', top: '120%', left: '25%'}}>
+                <span className="text-danger">{state.accountingMethodErr}</span>
+              </div>}
             </div>
-            <div className="col-md-4 d-flex"> 
-              <label htmlFor="" className="label">支払予定日</label>
+            <div className="col-md-4 d-flex" style={{alignItems: 'center'}}> 
+              <label htmlFor="" className="label">
+                支払予定日
+                <span className="required">*</span>
+              </label>
               <InputDatePicker 
                 value={state.formData.paymentDueDate} 
                 onChange={onChangePaymentDueDate} 
                 name="paymentDueDate" 
+                wrapperClassName = {state.paymentDueDateErr ? 'react-datepicker__input-container error' : 'react-datepicker__input-container'}
               />
+              {state.paymentDueDateErr && <div style={{marginLeft:10, minWidth: '100%'}}>
+                <span className="text-danger">{state.paymentDueDateErr}</span>
+              </div>}
             </div>
           </div>
 
           <div className="row row-cus pb-4">
-            <div className="col-md-4 d-flex">
+            <div className="col-md-4 d-flex" style={{alignItems: 'center'}}>
               <label htmlFor="" className="label">年度</label>
               <select className="input-cus" value={state.formData.year} onChange={onChange} name="year">
                 {
@@ -368,25 +408,35 @@ const AddEditScheduled = () => {
           </div>
 
           <div className="row row-cus pb-4">
-            <div className="col-md-4 d-flex"> 
-              <label htmlFor="" className="label">申請日</label>
+            <div className="col-md-4 d-flex" style={{alignItems: 'center'}}> 
+              <label htmlFor="" className="label">
+                申請日
+                <span className="required">*</span>
+              </label>
               <InputDatePicker 
-                value={state.formData.applicationDateDate} 
+                value={state.formData.applicationDate} 
                 onChange={onChangeApplicationDateDate} 
-                name="applicationDateDate" 
+                name="applicationDate" 
+                wrapperClassName = {state.applicationDateErr ? 'react-datepicker__input-container error' : 'react-datepicker__input-container'}
               />
+              {state.applicationDateErr && <div style={{marginLeft:10, minWidth: '100%'}}>
+                <span className="text-danger">{state.applicationDateErr}</span>
+              </div>}
             </div>
           </div>
 
           <div className="row row-cus pb-4">
             <div className="col-md-12 d-flex" style={{alignItems: 'center'}}>
-              <label htmlFor="" className="label">起票部門</label>
-              <input type="text" className="input-cus" value={state.formData.departmentCode} onChange={onChange} name="departmentCode" style={{marginRight:10}}/>
+              <label htmlFor="" className="label">
+                起票部門
+                <span className="required">*</span>
+              </label>
+              <input type="text" className={state.departmentErr ? "input-cus error" : "input-cus"} value={state.formData.departmentCode} onChange={onChange} name="departmentCode" style={{marginRight:10}}/>
               <input disabled type="text" className="input-disabled" value={state.formData.departmentName} style={{marginRight:10}}/>
               <button type="button" className="btn btn-primary" onClick={handleShow}>ガ</button>
-              {state.errMessage && state.errMessage.departmentCode && <div style={{marginLeft:10}}>
+              {/* {state.errMessage.departmentCode && <div style={{marginLeft:10}}>
                 <span className="text-danger">{state.errMessage.departmentCode}</span>
-              </div>}
+              </div>} */}
               {state.departmentErr && <div style={{marginLeft:10}}>
                 <span className="text-danger">{state.departmentErr}</span>
               </div>}
@@ -421,38 +471,41 @@ const AddEditScheduled = () => {
             </thead>
             <tbody>
               {
-                state.details.length > 0 && state.details.map((detail, index) => (
-                  <tr key={index}>
-                    <td>
-                      <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detail, item}}>{index + 1}</Link>
-                    </td>
-                    {/* {item && details.length > 0 &&
-                    <td>
-                      <span>{detail.DENPYONO}</span>
-                    </td>} */}
-                    <td>
-                      <span>{detail.IDODT}</span>
-                    </td>
-                    <td>
-                      <span>{detail.SHUPPATSUPLC}</span>
-                    </td>
-                    <td>
-                      <span>{detail.MOKUTEKIPLC}</span>
-                    </td>
-                    <td>
-                      <span>{detail.KEIRO}</span>
-                    </td>
-                    <td>
-                      <span>{detail.KINGAKU}</span>
-                    </td>
-                  </tr>
-                )) 
+                state.details.length > 0 && state.details.map((detail, index) => {
+                  const CHECKDELETE = detail.CHECKDELETE === 0 ? false : true;
+                  return (
+                    <tr key={index} style={{background : CHECKDELETE ? '#8f9092' : '', opacity: CHECKDELETE ? '0.8' : ''}}>
+                      <td>
+                        <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detailDB: {...detail, CHECKDELETE : detail.CHECKDELETE === 0 ? false : true}, item}}>{index + 1}</Link>
+                      </td>
+                      {/* {item && details.length > 0 &&
+                      <td>
+                        <span>{detail.DENPYONO}</span>
+                      </td>} */}
+                      <td>
+                        <span>{detail.IDODT}</span>
+                      </td>
+                      <td>
+                        <span>{detail.SHUPPATSUPLC}</span>
+                      </td>
+                      <td>
+                        <span>{detail.MOKUTEKIPLC}</span>
+                      </td>
+                      <td>
+                        <span>{detail.KEIRO}</span>
+                      </td>
+                      <td>
+                        <span>{detail.KINGAKU}</span>
+                      </td>
+                    </tr>
+                  )
+                }) 
               }
               {
-                dataStorage && dataStorage.length > 0 && dataStorage.map((detail, index) => (
-                  <tr key={index} style={{background : detail.checkDelete ? '#8f9092' : '', opacity: detail.checkDelete ? '0.8' : ''}}>
+                dataStorage && dataStorage.length > 0 && dataStorage.map((detail) => (
+                  <tr key={detail.GYONO} style={{background : detail.CHECKDELETE ? '#8f9092' : '', opacity: detail.CHECKDELETE ? '0.8' : ''}}>
                     <td>
-                    <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detail, item}}>{index + 1}</Link>
+                    <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detail, item}}>{detail.GYONO}</Link>
                     </td>
                     {/* {item && details.length > 0 &&
                     <td>

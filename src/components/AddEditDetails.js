@@ -1,18 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom"
-import { formatDate, getStorage, setStorage, useComponentDidUpdate } from "../utils/common";
-import { valid } from "../utils/valid";
-import InputDatePicker from "./DatePicker"
+import { API_URL_UPDATE_DETAIL } from "../contance";
+import { POST } from "../utils/apiHelper";
+import { formatDate, getStorage, setStorage } from "../utils/common";
+import { validate } from "../utils/valid";
+import InputDatePicker from "./DatePicker";
 
 const AddEditDetails = () => {
-  const hasMounted = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   const detail = location.state && location.state.detail;
+  const detailDB = location.state && location.state.detailDB;
   const item = location.state && location.state.item;
-  const [errMsg, setErrMsg] = useState(null);
-  const [isValid, setIsValid] = useState(false);
-  const [isUpdate, setIsUpdate] = useState(false);
 
   const [state, setState] = useState({
     formData: {
@@ -22,24 +21,23 @@ const AddEditDetails = () => {
       MOKUTEKIPLC: '',
       KEIRO: '',
       KINGAKU: '',
-      checkDelete: false,
+      CHECKDELETE: false,
     },
     detailStrg: [],
+    errMsg: null,
+    isError: {},
+    isValid: false,
   });
 
-  // useEffect(() => {
-  //   const {errMessage} = valid(state);
-  //   const isValid = Object.keys(errMessage).length > 0;
-  //   setErrMsg(errMessage);
-  //   setIsValid(isValid);
-  // }, [state]);
   useEffect(() => {
-    if( hasMounted.current) {
-      console.log('do')
-    } else {
-      hasMounted.current = true;
-    }
-  })
+    const {formData: {IDODT, SHUPPATSUPLC, MOKUTEKIPLC, KINGAKU}, isError} = state;
+    const isValid = Object.values(isError).some(item => item) || !IDODT || SHUPPATSUPLC === '' || MOKUTEKIPLC === '' || KINGAKU === '';
+    setState(prevState => ({
+      ...prevState,
+      isValid
+    }));
+
+  }, [state])
 
   useEffect(() => {
     if(detail) {
@@ -52,11 +50,25 @@ const AddEditDetails = () => {
           MOKUTEKIPLC: detail.MOKUTEKIPLC,
           KEIRO: detail.KEIRO,
           KINGAKU: detail.KINGAKU,
-          // checkDelete: detail.checkDelete
+          // CHECKDELETE: detail.CHECKDELETE
         }
       }))
     }
-  }, [detail])
+    if(detailDB) {
+      setState((prevState) => ({
+        ...prevState,
+        formData: {
+          ...prevState.formData,
+          IDODT: new Date(detailDB.IDODT),
+          SHUPPATSUPLC: detailDB.SHUPPATSUPLC,
+          MOKUTEKIPLC: detailDB.MOKUTEKIPLC,
+          KEIRO: detailDB.KEIRO,
+          KINGAKU: detailDB.KINGAKU,
+          // CHECKDELETE: detail.CHECKDELETE
+        }
+      }))
+    }
+  }, [detail, detailDB])
 
   useEffect(() => {
     const data = getStorage(`detail_${item.DENPYONO}`);
@@ -76,47 +88,43 @@ const AddEditDetails = () => {
   }, [state.detailStrg, item.DENPYONO]);
 
   const onChangeDate = (value) => {
+    const IDODT = !value ? 'Yêu cầu nhập !' : '';
+    const isError = {...state.isError, IDODT };
     setState(prevState => ({
       ...prevState,
       formData: {
         ...prevState.formData,
         IDODT: value,
-      }
+      },
+      isError
     }))
   }
 
   const onChange = e => {
     const {value, name, checked, type} = e.target;
     const data = type === 'checkbox' ? checked : value;
+    const isError = {...state.isError, [name] : validate(name, value)};
     setState(prevState => ({
       ...prevState,
       formData: {
         ...prevState.formData,
         [name] : data
-      }
+      },
+      isError
     }))
-    // const {errMessage} = valid(state);
-    // const isValid = Object.keys(errMessage).length > 0;
-    // setErrMsg(errMessage);
-    // setIsValid(isValid);
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const {formData} = state;
-    const {errMessage} = valid(state);
-    const isValid = Object.keys(errMessage).length > 0;
-    setErrMsg(errMessage);
-    setIsValid(isValid);
-
-    if(isValid) return;
-    let data;
+  
+    let data = {};
     if(detail) {
       data = {
         ...formData,
         SHUPPATSUPLC : formData.SHUPPATSUPLC.trim(),
         MOKUTEKIPLC: formData.MOKUTEKIPLC.trim(),
-        KINGAKU: formData.KINGAKU.trim(),
+        KINGAKU: formData.KINGAKU,
         KEIRO: formData.KEIRO.trim(),
         GYONO: detail.GYONO,
         DENPYONO: item.DENPYONO,
@@ -129,6 +137,22 @@ const AddEditDetails = () => {
         ...prevState,
         detailStrg: detailStrgTmp,
       }));
+    } else if(detailDB) {
+      data = {
+        ...formData,
+        SHUPPATSUPLC : formData.SHUPPATSUPLC.trim(),
+        MOKUTEKIPLC: formData.MOKUTEKIPLC.trim(),
+        KINGAKU: formData.KINGAKU,
+        KEIRO: formData.KEIRO.trim(),
+        GYONO: detailDB.GYONO,
+        DENPYONO: item.DENPYONO,
+        IDODT: formatDate(formData.IDODT),
+        CHECKDELETE: formData.CHECKDELETE
+      }
+      const datas = [{...data}];
+      datas.forEach(async item => {
+        await POST(API_URL_UPDATE_DETAIL, item);
+      })
     } else {
       data = {
         ...formData,
@@ -137,16 +161,17 @@ const AddEditDetails = () => {
         KINGAKU: formData.KINGAKU.trim(),
         KEIRO: formData.KEIRO.trim(),
         DENPYONO: item.DENPYONO,
-        IDODT: formatDate(formData.IDODT)
+        IDODT: formatDate(formData.IDODT),
+        CHECKDELETE: formData.CHECKDELETE
       }
       setState(prevState => ({
         ...prevState,
         detailStrg: [...prevState.detailStrg, data]
       }));
     }
-    navigate(-1);
+    navigate(-1, {state: {test: state}});
   }
-
+  const {isError} = state;
   return (
     <div>
       <h1 className='text-center my-5'>予定伝票入力</h1>
@@ -154,35 +179,45 @@ const AddEditDetails = () => {
         <form>
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
-              <label htmlFor="" className="label">年月日</label>
+              <label htmlFor="" className="label">
+                年月日
+                <span className="required">*</span>
+              </label>
               <InputDatePicker 
                 value={state.formData.IDODT} 
                 onChange={onChangeDate} 
                 name="IDODT" 
+                wrapperClassName = {isError && isError.IDODT ? 'react-datepicker__input-container error' : 'react-datepicker__input-container'}
               />
             </div>
-            {errMsg && errMsg.IDODT && <div className="col-md-4">
-            <span className="text-danger">{errMsg.IDODT}</span>
+            {isError && isError.IDODT && <div className="col-md-4">
+            <span className="text-danger">{isError.IDODT}</span>
             </div>}
           </div>
 
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
-              <label htmlFor="" className="label">出発地</label>
-              <input type="text" className="input-cus" name="SHUPPATSUPLC" value={state.formData.SHUPPATSUPLC} onChange={onChange}/>
+              <label htmlFor="" className="label">
+                出発地
+                <span className="required">*</span>
+              </label>
+              <input type="text" className={isError && isError.SHUPPATSUPLC ? "input-cus error" : "input-cus"} name="SHUPPATSUPLC" value={state.formData.SHUPPATSUPLC} onChange={onChange}/>
             </div>
-            {errMsg && errMsg.SHUPPATSUPLC && <div className="col-md-4">
-            <span className="text-danger">{errMsg.SHUPPATSUPLC}</span>
+            {isError && isError.SHUPPATSUPLC && <div className="col-md-4">
+            <span className="text-danger">{isError.SHUPPATSUPLC}</span>
             </div>}
           </div>
 
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
-              <label htmlFor="" className="label">目的地</label>
-              <input type="text" className="input-cus" name="MOKUTEKIPLC" value={state.formData.MOKUTEKIPLC} onChange={onChange}/>
+              <label htmlFor="" className="label">
+                目的地
+                <span className="required">*</span>
+              </label>
+              <input type="text" className={isError && isError.MOKUTEKIPLC ? "input-cus error" : "input-cus"} name="MOKUTEKIPLC" value={state.formData.MOKUTEKIPLC} onChange={onChange}/>
             </div>
-            {errMsg && errMsg.MOKUTEKIPLC && <div className="col-md-4">
-            <span className="text-danger">{errMsg.MOKUTEKIPLC}</span>
+            {isError && isError.MOKUTEKIPLC && <div className="col-md-4">
+            <span className="text-danger">{isError.MOKUTEKIPLC}</span>
             </div>}
           </div>
 
@@ -195,31 +230,34 @@ const AddEditDetails = () => {
 
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
-              <label htmlFor="" className="label">金額</label>
-              <input type="text" className="input-cus" name="KINGAKU" value={state.formData.KINGAKU} onChange={onChange}/>
+              <label htmlFor="" className="label">
+                金額
+                <span className="required">*</span>
+              </label>
+              <input type="text" className={isError && isError.KINGAKU ? "input-cus error" : "input-cus"} name="KINGAKU" value={state.formData.KINGAKU} onChange={onChange}/>
             </div>
-            {errMsg && errMsg.KINGAKU && <div className="col-md-4">
-            <span className="text-danger">{errMsg.KINGAKU}</span>
+            {isError && isError.KINGAKU && <div className="col-md-4">
+            <span className="text-danger">{isError.KINGAKU}</span>
             </div>}
           </div>
           
           <div className="row row-cus pb-4">
             <div className="col-md-4 d-flex"> 
-              <label htmlFor="check-delete" className="label" style={{cursor: detail ? 'pointer' : 'not-allowed', color: detail ? '' : '#999'}}>削除</label>
+              <label htmlFor="check-delete" className="label" style={{cursor: detail || detailDB ? 'pointer' : 'not-allowed', color: detail || detailDB ? '' : '#999'}}>削除</label>
               <input 
                 className="form-check-input" 
-                type="checkbox" value={state.formData.checkDelete} 
-                id="check-delete" style={{cursor: detail ? 'pointer' : ''}} 
-                name="checkDelete" onChange={onChange}
-                disabled={!detail}
-                // checked={state.checkDelete}
+                type="checkbox" value={state.formData.CHECKDELETE} 
+                id="check-delete" style={{cursor: detail || detailDB ? 'pointer' : ''}} 
+                name="CHECKDELETE" onChange={onChange}
+                disabled={!detail && !detailDB}
+                // checked={state.CHECKDELETE}
               />
             </div>
           </div>
 
           <div className="row row-cus pb-4">
             <div className="col-md-12" style={{display:'flex', justifyContent:'flex-end'}}>
-              <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleSubmit}>登録</button>
+              <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleSubmit} disabled={state.isValid}>登録</button>
               <button onClick={() => navigate(-1)} type="button" className="btn btn-primary">終了</button>
             </div>
           </div>

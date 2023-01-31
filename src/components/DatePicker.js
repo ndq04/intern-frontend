@@ -1,7 +1,7 @@
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const InputDatePicker = ({value, name, onChange, startDate, endDate}) => {
+const InputDatePicker = ({value, name, onChange, startDate, endDate, wrapperClassName}) => {
   // const today = new Date();
   return (
     <DatePicker
@@ -13,6 +13,7 @@ const InputDatePicker = ({value, name, onChange, startDate, endDate}) => {
       todayButton={"Today"}
       startDate={startDate}
       endDate={endDate}
+      wrapperClassName = {wrapperClassName}
     />
   )
 }

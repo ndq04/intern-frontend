@@ -3,7 +3,6 @@ import { formatDate } from "../utils/common";
 const HeadingResult = ({ data }) => {
   const amounts = data && data.map(item => item.KINGAKU);
   const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
-
   return (
     <div className="container">
       <div className="panel panel-default">

@@ -19,6 +19,21 @@
   border-radius: 0.375rem;
   transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }
+
+.input-cus.error, .react-datepicker__input-container.error input {
+  display: block;
+  width: 300px;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid orangered;
+  border-radius: 0.375rem;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
 input.input-disabled {
   display: block;
   width: 300px;
@@ -40,6 +55,16 @@ input.input-disabled {
   outline: 0;
   box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
 }
+
+.input-cus.error:focus, .react-datepicker__input-container.error input:focus {
+  color: #212529;
+  background-color: #fff;
+  border-color: orangered;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(255, 82, 82, 0.35);
+}
+
+
 .react-datepicker__triangle {
   left: 50% !important;
   transform: translateX(-50%) !important;
@@ -140,4 +165,12 @@ input.input-disabled {
   border-bottom: none;
   background: #cfe2ff;
   font-weight: bold;
+}
+
+.required {
+  display: inline-block;
+	padding-left: .1em;
+	font-size: 1.3em;
+	line-height: 1;
+	color: #fe3054 !important;
 }

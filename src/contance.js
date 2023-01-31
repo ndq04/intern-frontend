@@ -5,6 +5,8 @@ export const API_URL_ADD_SCHEDULED = 'http://localhost:8080/api/add-scheduled';
 export const API_URL_UPDATE_SCHEDULED = 'http://localhost:8080/api/update-scheduled';
 export const API_URL_DELETE_SCHEDULED = 'http://localhost:8080/api/delete-scheduled';
 export const API_URL_ADD_DETAIL = 'http://localhost:8080/api/add-detail';
+export const API_URL_UPDATE_DETAIL = 'http://localhost:8080/api/update-detail';
+export const API_URL_DELETE_DETAIL = 'http://localhost:8080/api/delete-detail';
 
 export const accountingMethods = [
   'Cash',

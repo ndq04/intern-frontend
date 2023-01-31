@@ -1,5 +1,3 @@
-import { useEffect, useRef } from "react";
-
 const adjust = (n) => (n < 10 ? `0${n}` : n);
 export const formatDate = (value) => {
   if (!value) return '';
@@ -12,24 +10,9 @@ export const setStorage = ({ key, val }) => {
 };
 
 export const getStorage = (key) => {
-  return JSON.parse(localStorage.getItem(key));
-  // return json ? json : [];
+  return JSON.parse(localStorage.getItem(key)) || [];
 };
 
 export const removeStorage = (key) => {
   localStorage.removeItem(key);
-};
-
-export const useComponentDidUpdate = (callback, dependencies) => {
-  const hasMounted = useRef(true);
-  useEffect(
-    () => {
-      if (hasMounted.current) {
-        hasMounted.current = false;
-      } else {
-        return callback();
-      }
-    }, 
-    [callback, dependencies]
-  );
 };
