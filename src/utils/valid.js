@@ -39,10 +39,6 @@ export const valid = (data) => {
     err.MOKUTEKIPLC = 'Yêu cầu nhập !';
   }
 
-  // if(!data.accountingMethod) {
-  //   err.accountingMethod = 'Trường bắt buộc !'
-  // }
-
   return {
     errMessage: err,
     errLength: Object.keys(err).length,

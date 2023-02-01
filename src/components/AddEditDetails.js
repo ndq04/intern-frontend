@@ -30,14 +30,14 @@ const AddEditDetails = () => {
   });
 
   useEffect(() => {
-    const {formData: {IDODT, SHUPPATSUPLC, MOKUTEKIPLC, KINGAKU}, isError} = state;
-    const isValid = Object.values(isError).some(item => item) || !IDODT || SHUPPATSUPLC === '' || MOKUTEKIPLC === '' || KINGAKU === '';
+    const {IDODT, SHUPPATSUPLC, MOKUTEKIPLC, KINGAKU} = state.formData;
+    const isValid = Object.values(state.isError).some(item => item) || !IDODT || SHUPPATSUPLC === '' || MOKUTEKIPLC === '' || KINGAKU === '';
     setState(prevState => ({
       ...prevState,
       isValid
     }));
 
-  }, [state])
+  }, [state.formData, state.isError])
 
   useEffect(() => {
     if(detail) {
@@ -103,7 +103,7 @@ const AddEditDetails = () => {
   const onChange = e => {
     const {value, name, checked, type} = e.target;
     const data = type === 'checkbox' ? checked : value;
-    const isError = {...state.isError, [name] : validate(name, value)};
+    const isError = name !== 'KEIRO' && {...state.isError, [name] : validate(name, value)};
     setState(prevState => ({
       ...prevState,
       formData: {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   API_URL_ADD_DETAIL, 
   API_URL_ADD_SCHEDULED, 
@@ -25,6 +25,12 @@ const AddEditScheduled = () => {
   const navigate = useNavigate();
   const item = location.state && location.state.item;
   const dataStorage = item && getStorage(`detail_${item.DENPYONO}`);
+
+  const handleRedirectDetail = (detail) => {
+    const stateDetail = typeof detail.CHECKDELETE === 'boolean' ?
+    {detail: detail, item: item} : {detailDB: {...detail, CHECKDELETE : detail.CHECKDELETE === 0 ? false : true}, item: item};
+    navigate({pathname: '/details', hash: `${detail.GYONO}`}, {state: stateDetail});
+  }
 
   const [state, setState] = useState({
     formData : {
@@ -104,11 +110,6 @@ const AddEditScheduled = () => {
     }))
     navigate('/');
   };
-
-  const handleShowError = () => setState(prevState => ({
-    ...prevState,
-    showError: true,
-  }));
 
   const handleHideError = () => setState(prevState => ({
     ...prevState,
@@ -284,17 +285,14 @@ const AddEditScheduled = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const checkValid = !!state.formData.accountingMethod && !!state.formData.paymentDueDate && !!state.formData.applicationDate && !!state.formData.departmentCode;
-      if(!checkValid) {
-        handleShowError();
-        return;
-      }
       const {formData, details} = state;
       const data = {...formData};
       if(dataStorage && dataStorage.length > 0 ) {
         const dataDetailStorage = [...dataStorage].filter(item => item && !item.CHECKDELETE);
         if(dataDetailStorage.length > 0) {
           await POST(API_URL_ADD_DETAIL, dataDetailStorage);
+          removeStorage(`detail_${item.DENPYONO}`);
+        } else {
           removeStorage(`detail_${item.DENPYONO}`);
         }
       }
@@ -336,6 +334,8 @@ const AddEditScheduled = () => {
       selectDepartment: value,
     }));
   }
+
+  const detailsConcat = state.details && state.details.concat(dataStorage);
 
   return (
     <div>
@@ -471,12 +471,16 @@ const AddEditScheduled = () => {
             </thead>
             <tbody>
               {
-                state.details.length > 0 && state.details.map((detail, index) => {
-                  const CHECKDELETE = detail.CHECKDELETE === 0 ? false : true;
+                detailsConcat.length > 0 && detailsConcat.map((detail, index) => {
+                  const CHECKDELETE = typeof detail.CHECKDELETE === 'boolean' ? detail.CHECKDELETE : (detail.CHECKDELETE === 0 ? false : true);
                   return (
-                    <tr key={index} style={{background : CHECKDELETE ? '#8f9092' : '', opacity: CHECKDELETE ? '0.8' : ''}}>
+                    <tr 
+                      key={index} 
+                      style={{background : CHECKDELETE ? '#8f9092' : '', opacity: CHECKDELETE ? '0.7' : ''}}
+                      onDoubleClick={()=>handleRedirectDetail(detail)}
+                    >
                       <td>
-                        <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detailDB: {...detail, CHECKDELETE : detail.CHECKDELETE === 0 ? false : true}, item}}>{index + 1}</Link>
+                        <span>{index + 1}</span>
                       </td>
                       {/* {item && details.length > 0 &&
                       <td>
@@ -500,34 +504,6 @@ const AddEditScheduled = () => {
                     </tr>
                   )
                 }) 
-              }
-              {
-                dataStorage && dataStorage.length > 0 && dataStorage.map((detail) => (
-                  <tr key={detail.GYONO} style={{background : detail.CHECKDELETE ? '#8f9092' : '', opacity: detail.CHECKDELETE ? '0.8' : ''}}>
-                    <td>
-                    <Link to={{pathname : '/details', hash: `${detail.GYONO}`, }} state={{detail, item}}>{detail.GYONO}</Link>
-                    </td>
-                    {/* {item && details.length > 0 &&
-                    <td>
-                      <span>{detail.DENPYONO}</span>
-                    </td>} */}
-                    <td>
-                      <span>{detail.IDODT}</span>
-                    </td>
-                    <td>
-                      <span>{detail.SHUPPATSUPLC}</span>
-                    </td>
-                    <td>
-                      <span>{detail.MOKUTEKIPLC}</span>
-                    </td>
-                    <td>
-                      <span>{detail.KEIRO}</span>
-                    </td>
-                    <td>
-                      <span>{detail.KINGAKU}</span>
-                    </td>
-                  </tr>
-                )) 
               }
                 <tr>
                   <td></td>

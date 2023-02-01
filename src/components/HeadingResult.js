@@ -1,8 +1,14 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/common";
 const HeadingResult = ({ data }) => {
   const amounts = data && data.map(item => item.KINGAKU);
   const moneys = amounts && amounts.reduce((a, b) => a + b, 0);
+  const navigate = useNavigate();
+
+  const handleRedirect = (item) => {
+    navigate({pathname: '/scheduled', hash: `${item.DENPYONO}`}, {state:{item}});
+  }
+
   return (
     <div className="container">
       <div className="panel panel-default">
@@ -29,12 +35,12 @@ const HeadingResult = ({ data }) => {
               </thead>
               <tbody>
                 {data.map((item, index) => (
-                  <tr key={index}>
+                  <tr key={index} onDoubleClick={() => handleRedirect(item)}>
                     <td>
                       <span>{index + 1}</span>
                     </td>
                     <td>
-                      <Link to={{ pathname: '/scheduled', hash: `${item.DENPYONO}` }} state={{ item }}>{item.DENPYONO}</Link>
+                      <span>{item.DENPYONO}</span>
                     </td>
                     <td>
                       <span>{item.BUMONNM}</span>
