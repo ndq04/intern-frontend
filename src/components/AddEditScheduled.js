@@ -24,7 +24,7 @@ const AddEditScheduled = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const item = location.state && location.state.item;
-  const dataStorage = item && getStorage(`detail_${item.DENPYONO}`);
+  const dataStorage = (item && getStorage(`detail_${item.DENPYONO}`)) || [];
 
   const handleRedirectDetail = (detail) => {
     const stateDetail = typeof detail.CHECKDELETE === 'boolean' ?
@@ -65,6 +65,7 @@ const AddEditScheduled = () => {
     ...prevState,
     showDepartmentPopup: true,
   }));
+
   const handleClose = () => {
     // if(!item) {
     setState((prevState)=>({
@@ -88,10 +89,12 @@ const AddEditScheduled = () => {
       )
       .catch(err => console.log(err));
   };
+
   const show = () => setState(prevState => ({
     ...prevState,
     showSuccess: true,
   }));
+
   const hide = () => {
     setState(prevState => ({
       ...prevState,
@@ -120,8 +123,13 @@ const AddEditScheduled = () => {
     ...prevState,
     showDelete: true,
   }));
+
+  const handleHideDel = () => setState(prevState => ({
+    ...prevState,
+    showDelete: false,
+  }));
   
-  const handleHideDel = async () => {
+  const handleDel = async () => {
     const id = item && item.DENPYONO;
     const res =  await POST(API_URL_DELETE_SCHEDULED, {id});
     if(res.status === 200) {
@@ -198,6 +206,7 @@ const AddEditScheduled = () => {
       }))
     }
   }, [item]);
+
   const amounts = state.details.length > 0 && state.details.map(item => item.KINGAKU);
   const amounts1 = dataStorage && dataStorage.map(item => Number(item.KINGAKU));
 
@@ -271,7 +280,7 @@ const AddEditScheduled = () => {
     }))
   }
 
-  const onChangeApplicationDateDate = (value) => {
+  const onChangeApplicationDate = (value) => {
     const applicationDateErr = !value ? 'Yêu cầu nhập !' : null;
     setState(prevState => ({
       ...prevState,
@@ -282,6 +291,7 @@ const AddEditScheduled = () => {
       applicationDateErr
     }))
   }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -318,6 +328,7 @@ const AddEditScheduled = () => {
       console.log(error);
     }
   }
+
   const handleConfirmDelete = (e) => {
     const id = item && item.DENPYONO;
     setState(prevState => ({
@@ -349,9 +360,16 @@ const AddEditScheduled = () => {
             </div>
             <div className="col-md-4"></div>
             <div className="col-md-4">
-              <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleSubmit} disabled={state.isValid}>登録</button>
-              <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleConfirmDelete} disabled={!item}>削除</button>
-              <button onClick={() => navigate(-1) } type="button" className="btn btn-primary">終了</button>
+              {
+                state.isValid ? <button type="button" className="btn btn-secondary" style={{marginRight: 10}} disabled={state.isValid}>登録</button> :
+                <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleSubmit}>登録</button>
+              }
+              {
+                !item ? <button type="button" className="btn btn-secondary" style={{marginRight: 10}} onClick={handleConfirmDelete} disabled={!item}>削除</button> :
+                <button type="button" className="btn btn-warning" style={{marginRight: 10}} onClick={handleConfirmDelete}>削除</button>
+              }
+              
+              <button onClick={() => navigate(-1) } type="button" className="btn btn-danger">終了</button>
             </div>
           </div>
 
@@ -415,7 +433,7 @@ const AddEditScheduled = () => {
               </label>
               <InputDatePicker 
                 value={state.formData.applicationDate} 
-                onChange={onChangeApplicationDateDate} 
+                onChange={onChangeApplicationDate} 
                 name="applicationDate" 
                 wrapperClassName = {state.applicationDateErr ? 'react-datepicker__input-container error' : 'react-datepicker__input-container'}
               />
@@ -451,14 +469,18 @@ const AddEditScheduled = () => {
               <input type="text" className="input-cus" value={state.formData.comment} onChange={onChange} name="comment"/>
             </div>
             <div className="col-md-8" style={{display:'flex', justifyContent:'flex-end'}}>
-              <button type="button" className="btn btn-primary" disabled={!item} onClick={() => navigate('/details', {state: {item}})}>明細追加</button>
+              {
+                !item ? <button type="button" className="btn btn-secondary" disabled={!item} >明細追加</button> :
+                <button type="button" className="btn btn-primary" onClick={() => navigate('/details', {state: {item}})}>明細追加</button>
+              }
+              
             </div>
           </div>
         </form>
         <div className="heading">交通費</div>
         <div className="panel-body">
           <table className="table table-bordered">
-            <thead className="table-primary">
+            <thead className="table-warning">
               <tr>
                 <th className="is-center"><span className="mb0 nowrap ct-custom bbw">行</span></th>
                 {/* {item && details.length > 0 && <th className="is-center"><span className="mb0 nowrap ct-custom bbw">伝票番号</span></th>} */}
@@ -472,11 +494,11 @@ const AddEditScheduled = () => {
             <tbody>
               {
                 detailsConcat.length > 0 && detailsConcat.map((detail, index) => {
-                  const CHECKDELETE = typeof detail.CHECKDELETE === 'boolean' ? detail.CHECKDELETE : (detail.CHECKDELETE === 0 ? false : true);
+                  const CHECKDELETE =  typeof detail.CHECKDELETE === 'boolean' ? detail.CHECKDELETE : (detail.CHECKDELETE === 0 ? false : true);
                   return (
                     <tr 
                       key={index} 
-                      style={{background : CHECKDELETE ? '#8f9092' : '', opacity: CHECKDELETE ? '0.7' : ''}}
+                      style={{background : CHECKDELETE ? '#6c757d' : '', opacity: CHECKDELETE ? '0.6' : '', color: CHECKDELETE ? '#f1f1f1' : '#000'}}
                       onDoubleClick={()=>handleRedirectDetail(detail)}
                     >
                       <td>
@@ -511,8 +533,8 @@ const AddEditScheduled = () => {
                   <td></td>
                   <td></td>
                   <td></td>
-                  <td>交通費計</td>
-                  <td>{sums}</td>
+                  <td style={{fontSize: '1.1rem', fontWeight:'bold'}}>交通費計</td>
+                  <td style={{fontSize: '1.1rem', fontWeight:'bold'}}>{sums}</td>
                 </tr>
             </tbody>
           </table>
@@ -526,9 +548,9 @@ const AddEditScheduled = () => {
       />
       <ModalSuccess show={state.showSuccess} hide={hide} id={state.id} item={item} isDel={state.isDel}/>
       <ModalError show={state.showError} hide={handleHideError} item={item}/>
-      <ModalDelete show={state.showDelete} hide={handleHideDel} id={state.id} setShowDelete={setState}/>
+      <ModalDelete show={state.showDelete} hide={handleHideDel} handleDel={handleDel} id={state.id} setShowDelete={setState}/>
     </div>
   )
 }
 
-export default AddEditScheduled
+export default AddEditScheduled;

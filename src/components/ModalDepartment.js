@@ -89,7 +89,10 @@ const ModalDepartment = ({
           <div className="row row-cus pb-3">
             <div className="d-flex">
               <label className="label"></label>
-              <button className="btn btn-primary" disabled={isValid}>検索</button>
+              {
+                isValid ? <button className="btn btn-secondary" disabled={isValid}>検索</button> :
+                <button className="btn btn-success">検索</button>
+              }
             </div>
           </div>
         </form>
@@ -133,10 +136,11 @@ const ModalDepartment = ({
           </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="primary" onClick={handleSave} disabled={!parentState.selectDepartment}>
-          選択
-        </Button>
-        <Button variant="secondary" onClick={handleClose}>
+        {
+        !parentState.selectDepartment  ? <Button variant="secondary" disabled={!parentState.selectDepartment}>選択</Button> :
+          <Button variant="success" onClick={handleSave} >選択</Button>
+        }
+        <Button variant="danger" onClick={handleClose}>
           戻る
         </Button>
       </Modal.Footer>

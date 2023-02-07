@@ -165,6 +165,7 @@ input.input-disabled {
   border-bottom: none;
   background: #cfe2ff;
   font-weight: bold;
+  font-size: 1.3rem;
 }
 
 .required {
@@ -173,4 +174,31 @@ input.input-disabled {
 	font-size: 1.3em;
 	line-height: 1;
 	color: #fe3054 !important;
+}
+
+.input.input.form-check-input {
+  width: 1.2em !important;
+  height: 1.2em !important;
+}
+
+.del-icon, 
+.back-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.25em;
+  border-radius: 0.25em;
+  cursor: pointer;
+  width: 1.2em;
+  height: 1.2em;
+  color: #f1f1f1;
+}
+
+.del-icon {
+  background-color: #fe3054;
+  margin-left: 0.6em;
+}
+.back-icon {
+  background-color: #ffc107;
+  border-color: #ffc107;
 }

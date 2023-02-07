@@ -61,6 +61,7 @@ const HeadingForm = ({setData}) => {
     .then(res=> res && res.data && setData(res.data))
     .catch(err => console.log(err));
   }
+  
   const {errMessage} = valid(formData);
   const isValid = Object.keys(errMessage).length > 0;
 
@@ -173,7 +174,10 @@ const HeadingForm = ({setData}) => {
 
         <div className="row">
           <div className="col-md-10 pb-4"> 
-            <button type="submit" className="btn btn-primary" disabled={isValid}>検索</button>
+            {
+              isValid ? <button type="submit" className="btn btn-secondary" disabled={isValid}>検索</button> : 
+              <button type="submit" className="btn btn-primary">検索</button>
+            }
           </div>
           <div className="col-md-2 pb-4"> 
             <Link to='/scheduled' className="btn btn-primary" disabled={isValid}>登録</Link>
@@ -184,4 +188,4 @@ const HeadingForm = ({setData}) => {
   )
 }
 
-export default HeadingForm
+export default HeadingForm;

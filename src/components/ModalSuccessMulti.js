@@ -1,6 +1,6 @@
 import {Modal, Button} from 'react-bootstrap';
 
-const ModalSuccess = ({show, hide, id, item, isDel}) => {
+const ModalSuccessMulti = ({show, hide, ids}) => {
   return (
     <Modal show={show} onHide={hide}>
       <Modal.Header>
@@ -10,10 +10,13 @@ const ModalSuccess = ({show, hide, id, item, isDel}) => {
       </Modal.Header>
       <Modal.Body>
         <div>
-          <span>{(item && !isDel) ? 'データ更新成功。' : (isDel && item) ? 'データを正常に削除する' : 'データを正常に追加。'}</span>
-          <div>
-            <span>伝票番号: {id}</span>
-          </div>
+          <span>データを正常に削除する</span>
+          <p>伝票番号:</p>
+          <ul>
+            {
+              ids.map(item => <li key={item}>{item}</li>)
+            }
+          </ul>
         </div>
       </Modal.Body>
       <Modal.Footer>
@@ -25,4 +28,4 @@ const ModalSuccess = ({show, hide, id, item, isDel}) => {
   )
 }
 
-export default ModalSuccess;
+export default ModalSuccessMulti

@@ -1,6 +1,6 @@
 import {Modal, Button} from 'react-bootstrap';
 
-const ModalDelete = ({show, hide, id, setShowDelete, handleDel}) => {
+const ModalDeleteMulti = ({show, hide, ids, setShowDelete, handleDel}) => {
   return (
     <Modal show={show} onHide={hide}>
       <Modal.Header>
@@ -11,9 +11,12 @@ const ModalDelete = ({show, hide, id, setShowDelete, handleDel}) => {
       <Modal.Body>
         <div>
           <span>データを削除しますか？</span>
-          <div>
-            <span style={{color:'red', fontWeight:'bold'}}>伝票番号: {id}</span>
-          </div>
+          <p style={{color:'red', fontWeight:'bold'}}>伝票番号:</p>
+          <ul>
+            {
+              ids.map(item => <li key={item} style={{color:'red', fontWeight:'bold'}}>{item}</li>)
+            }
+          </ul>
         </div>
       </Modal.Body>
       <Modal.Footer>
@@ -23,7 +26,7 @@ const ModalDelete = ({show, hide, id, setShowDelete, handleDel}) => {
         <Button variant="danger" onClick={()=>setShowDelete(prevState => ({
           ...prevState,
           item: {},
-          showDelete: false,
+          showDeleteMulti: false,
         }))}>
           いいえ
         </Button>
@@ -32,4 +35,4 @@ const ModalDelete = ({show, hide, id, setShowDelete, handleDel}) => {
   )
 }
 
-export default ModalDelete;
+export default ModalDeleteMulti

@@ -7,9 +7,11 @@ import HeadingResult from "./HeadingResult";
 const HeadingHome = () => {
   const [result, setResult] = useState([]);
   const {data} = useFetch(API_URL_HEADING, 'GET');
+
   useEffect(() => {
-    setResult(data);
+    data && setResult(data);
   },[data]);
+
   return (
     <div>
       <h1 className='text-center my-5'>予定伝票一覧</h1>
@@ -19,4 +21,4 @@ const HeadingHome = () => {
   )
 }
 
-export default HeadingHome
+export default HeadingHome;

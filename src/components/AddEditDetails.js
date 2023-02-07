@@ -37,7 +37,7 @@ const AddEditDetails = () => {
       isValid
     }));
 
-  }, [state.formData, state.isError])
+  }, [state.formData, state.isError]);
 
   useEffect(() => {
     if(detail) {
@@ -68,7 +68,7 @@ const AddEditDetails = () => {
         }
       }))
     }
-  }, [detail, detailDB])
+  }, [detail, detailDB]);
 
   useEffect(() => {
     const data = getStorage(`detail_${item.DENPYONO}`);
@@ -78,7 +78,7 @@ const AddEditDetails = () => {
         detailStrg: data,
       }));
     }
-  }, [item.DENPYONO])
+  }, [item.DENPYONO]);
 
   useEffect(() => {
     setStorage({
@@ -90,6 +90,7 @@ const AddEditDetails = () => {
   const onChangeDate = (value) => {
     const IDODT = !value ? 'Yêu cầu nhập !' : '';
     const isError = {...state.isError, IDODT };
+
     setState(prevState => ({
       ...prevState,
       formData: {
@@ -104,6 +105,7 @@ const AddEditDetails = () => {
     const {value, name, checked, type} = e.target;
     const data = type === 'checkbox' ? checked : value;
     const isError = name !== 'KEIRO' && {...state.isError, [name] : validate(name, value)};
+
     setState(prevState => ({
       ...prevState,
       formData: {
@@ -133,6 +135,7 @@ const AddEditDetails = () => {
       const detailStrgTmp = [...state.detailStrg];
       const findIndex = detailStrgTmp.findIndex(item => item && item.GYONO === data.GYONO);
       detailStrgTmp[findIndex] = data;
+      
       setState(prevState => ({
         ...prevState,
         detailStrg: detailStrgTmp,
@@ -172,6 +175,7 @@ const AddEditDetails = () => {
     navigate(-1, {state: {test: state}});
   }
   const {isError} = state;
+
   return (
     <div>
       <h1 className='text-center my-5'>予定伝票入力</h1>
@@ -257,8 +261,11 @@ const AddEditDetails = () => {
 
           <div className="row row-cus pb-4">
             <div className="col-md-12" style={{display:'flex', justifyContent:'flex-end'}}>
-              <button type="button" className="btn btn-primary" style={{marginRight: 10}} onClick={handleSubmit} disabled={state.isValid}>登録</button>
-              <button onClick={() => navigate(-1)} type="button" className="btn btn-primary">終了</button>
+              {
+                state.isValid ? <button type="button" className="btn btn-secondary" style={{marginRight: 10}} disabled={state.isValid}>登録</button> :
+                <button type="button" className="btn btn-success" style={{marginRight: 10}} onClick={handleSubmit}>登録</button>
+              }
+              <button onClick={() => navigate(-1)} type="button" className="btn btn-danger">終了</button>
             </div>
           </div>
         </form>
@@ -267,4 +274,4 @@ const AddEditDetails = () => {
   )
 }
 
-export default AddEditDetails
+export default AddEditDetails;
